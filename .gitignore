@@ -1,5 +1,12 @@
 node_modules/
 dist/
+
+# Requires a 'workflow' OAuth scope this session's gh auth doesn't have;
+# kept on disk for later, not pushed. See commit history for context.
+.github/workflows/deploy.yml
+
+# WordPress page copy, not part of the built site
+wp-page-teleprompter.html
 .DS_Store
 *.local
 .env
