@@ -17,7 +17,7 @@ export const DEFAULT_CONFIG: AppConfig = {
     paragraphSpacing: 0.5,
     smoothAnimations: false,
     highlightActiveWord: true,
-    activeLinePosition: 10, // Default to 10% from top
+    activeLinePosition: 50, // Default to 50% (vertical center)
     lookaheadWords: 30, // Default lookahead (was 5 — too narrow for CJK char-level tokens; getting more than a handful of characters behind made it impossible to ever re-match, see feedback 2026-08-30)
     dockOpacity: 50, // Default dock opacity (50%)
     fontFamily: 'mono', // Default font
