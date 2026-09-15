@@ -4,6 +4,7 @@ import { DEFAULT_CONFIG } from './state';
 const HISTORY_KEY = 'teleprompter_history';
 const CONFIG_KEY = 'teleprompter_config';
 const CENTER_MIGRATION_KEY = 'teleprompter_migrated_center_default_v1';
+const SCROLLINGMODE_MIGRATION_KEY = 'teleprompter_migrated_scrollingmode_v1';
 
 export function saveConfig(config: AppConfig): void {
     try {
@@ -29,6 +30,19 @@ export function loadConfig(): AppConfig {
         if (!localStorage.getItem(CENTER_MIGRATION_KEY)) {
             merged.activeLinePosition = DEFAULT_CONFIG.activeLinePosition;
             localStorage.setItem(CENTER_MIGRATION_KEY, '1');
+            saveConfig(merged);
+        }
+
+        // One-time repair: an earlier build of the plain Play button wrote
+        // scrollingMode: 'constant' into this same saved blob as a side
+        // effect of starting constant-speed playback, silently overwriting
+        // the user's real voice-follow preference. That's fixed going
+        // forward (the Play button no longer touches config at all), but
+        // anyone who already got stuck on 'constant' from the buggy version
+        // needs it put back once.
+        if (!localStorage.getItem(SCROLLINGMODE_MIGRATION_KEY)) {
+            merged.scrollingMode = DEFAULT_CONFIG.scrollingMode;
+            localStorage.setItem(SCROLLINGMODE_MIGRATION_KEY, '1');
             saveConfig(merged);
         }
 
