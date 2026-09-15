@@ -35,6 +35,12 @@ export interface AppConfig {
 
 export interface AppState {
     isListening: boolean;
+    // Which mode is actually driving the current playback session (null when
+    // idle). Distinct from config.scrollingMode, which is the persisted
+    // preference for next time — a caller can override the active mode for
+    // one session (e.g. the plain Play button forcing 'constant') without
+    // touching what the user has configured.
+    activeScrollingMode: ScrollingMode | null;
     scriptWords: ScriptWord[];
     currentIndex: number;
     recognition: any; // Using any for SpeechRecognition as it's experimental

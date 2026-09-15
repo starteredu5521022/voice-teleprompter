@@ -1,4 +1,5 @@
 import { state } from './state';
+import { ScrollingMode } from './types';
 import { updateHighlight, scrollToCurrent, updateMicUI } from './render';
 
 class AutoScrollManager {
@@ -13,16 +14,21 @@ class AutoScrollManager {
     private readonly soundHoldDuration: number = 250; // ms
     private mediaStream: MediaStream | null = null;
     private sessionId: number = 0;
+    // The mode this run was actually started with — a caller can pass an
+    // explicit override (e.g. the plain Play button forcing 'constant')
+    // without that being read back from config.scrollingMode everywhere.
+    private activeMode: ScrollingMode = 'constant';
 
-    public async start(): Promise<boolean> {
+    public async start(mode: ScrollingMode = state.config.scrollingMode): Promise<boolean> {
         this.stop();
         const sessionId = this.sessionId;
         this.accumulator = 0;
         this.lastSoundTime = 0;
+        this.activeMode = mode;
 
-        if (state.config.scrollingMode === 'sound') {
+        if (this.activeMode === 'sound') {
             const audioStarted = await this.startAudioMonitor(sessionId);
-            if (!audioStarted || sessionId !== this.sessionId || state.config.scrollingMode !== 'sound') {
+            if (!audioStarted || sessionId !== this.sessionId || this.activeMode !== 'sound') {
                 return false;
             }
         }
@@ -51,7 +57,7 @@ class AutoScrollManager {
             });
 
             // The mode may have changed while the browser permission prompt was open.
-            if (sessionId !== this.sessionId || state.config.scrollingMode !== 'sound') {
+            if (sessionId !== this.sessionId || this.activeMode !== 'sound') {
                 stream.getTracks().forEach(track => track.stop());
                 return false;
             }
@@ -90,7 +96,7 @@ class AutoScrollManager {
     }
 
     private pollAudio = () => {
-        if (!this.analyser || !this.dataArray || state.config.scrollingMode !== 'sound') return;
+        if (!this.analyser || !this.dataArray || this.activeMode !== 'sound') return;
 
         this.analyser.getByteTimeDomainData(this.dataArray as any);
         
@@ -118,11 +124,12 @@ class AutoScrollManager {
         if (state.currentIndex >= state.scriptWords.length) {
             this.stop();
             state.isListening = false;
+            state.activeScrollingMode = null;
             updateMicUI(false);
             return;
         }
 
-        if (state.config.scrollingMode === 'sound') {
+        if (this.activeMode === 'sound') {
             const timeSinceSound = performance.now() - this.lastSoundTime;
             if (timeSinceSound > this.soundHoldDuration) {
                 return; // Paused waiting for sound

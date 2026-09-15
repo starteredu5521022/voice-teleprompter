@@ -292,7 +292,13 @@ export function updateMicUI(isListening: boolean): void {
     els.settingsPanel.classList.toggle('settings-locked', isListening);
     els.settingsLockedBanner.classList.toggle('hidden', !isListening);
 
-    const isVoice = state.config.scrollingMode === 'voice';
+    // While a session is running, reflect what's actually driving it
+    // (activeScrollingMode, which a caller like the plain Play button may
+    // have overridden); once idle, fall back to the saved preference so the
+    // mic button's icon/label matches what pressing it again will do.
+    const isVoice = isListening
+        ? state.activeScrollingMode === 'voice'
+        : state.config.scrollingMode === 'voice';
     const pathEl = els.micButton.querySelector('path');
     
     if (isListening) {

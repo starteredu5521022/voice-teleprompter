@@ -3,6 +3,7 @@ import { DEFAULT_CONFIG } from './state';
 
 const HISTORY_KEY = 'teleprompter_history';
 const CONFIG_KEY = 'teleprompter_config';
+const CENTER_MIGRATION_KEY = 'teleprompter_migrated_center_default_v1';
 
 export function saveConfig(config: AppConfig): void {
     try {
@@ -18,8 +19,20 @@ export function saveConfig(config: AppConfig): void {
 export function loadConfig(): AppConfig {
     try {
         const raw = localStorage.getItem(CONFIG_KEY);
-        if (!raw) return { ...DEFAULT_CONFIG };
-        return { ...DEFAULT_CONFIG, ...JSON.parse(raw) };
+        const merged: AppConfig = raw ? { ...DEFAULT_CONFIG, ...JSON.parse(raw) } : { ...DEFAULT_CONFIG };
+
+        // One-time migration: the active-line position used to default near
+        // the top (10%); a saved value always wins over a new default, so
+        // anyone who already had settings saved before this changed would
+        // otherwise be stuck on the old position forever. Runs once per
+        // browser, then leaves whatever the user sets alone.
+        if (!localStorage.getItem(CENTER_MIGRATION_KEY)) {
+            merged.activeLinePosition = DEFAULT_CONFIG.activeLinePosition;
+            localStorage.setItem(CENTER_MIGRATION_KEY, '1');
+            saveConfig(merged);
+        }
+
+        return merged;
     } catch (err) {
         console.error('Failed to load saved settings:', err);
         return { ...DEFAULT_CONFIG };

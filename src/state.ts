@@ -31,6 +31,7 @@ export const state: AppState = {
     currentIndex: 0,
     recognition: null,
     isListening: false,
+    activeScrollingMode: null,
     isMirrored: false,
     isMirroredH: false,
     isScreenRotated: false,

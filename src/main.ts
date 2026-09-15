@@ -584,18 +584,26 @@ let isAutoScrollStarting = false;
 // Shared start/stop for the teleprompter's own scroll-following (voice/sound/constant
 // modes), used by both the standalone mic button (practice mode, no recording) and
 // the unified record button (recording + teleprompter together).
-async function startTeleprompterPlayback(): Promise<boolean> {
+//
+// `modeOverride` lets a caller force a specific mode for just this session
+// (the plain Play button forces 'constant') without touching
+// config.scrollingMode — that field is the user's saved preference for next
+// time, and a one-off override shouldn't silently change it.
+async function startTeleprompterPlayback(modeOverride?: ScrollingMode): Promise<boolean> {
     if (state.isListening) return true;
+    const mode = modeOverride ?? state.config.scrollingMode;
+    state.activeScrollingMode = mode;
 
-    if (state.config.scrollingMode === 'voice') {
+    if (mode === 'voice') {
         (window as any).umami?.track('mic-start');
         startListening();
     } else {
         isAutoScrollStarting = true;
-        const started = await autoScrollManager.start();
+        const started = await autoScrollManager.start(mode);
         isAutoScrollStarting = false;
         if (!started) {
-            if (state.config.scrollingMode === 'sound') {
+            state.activeScrollingMode = null;
+            if (mode === 'sound') {
                 alert('聲音偵測模式需要麥克風權限，請允許權限後再試一次。');
             }
             return false;
@@ -613,7 +621,7 @@ async function startTeleprompterPlayback(): Promise<boolean> {
 function stopTeleprompterPlayback(): void {
     if (!state.isListening) return;
 
-    if (state.config.scrollingMode === 'voice') {
+    if (state.activeScrollingMode === 'voice') {
         (window as any).umami?.track('mic-stop');
         stopListening();
     } else {
@@ -621,6 +629,7 @@ function stopTeleprompterPlayback(): void {
         state.isListening = false;
         import('./render').then(({ updateMicUI }) => updateMicUI(false));
     }
+    state.activeScrollingMode = null;
     // Restore dock opacity (unless a recording is still using it)
     if (!state.isRecording) {
         const dock = document.getElementById('mainControlsDock');
@@ -683,9 +692,7 @@ els.playButton.addEventListener('click', async () => {
         stopTeleprompterPlayback();
         return;
     }
-    state.config.scrollingMode = 'constant';
-    updateScrollingUI();
-    await startTeleprompterPlayback();
+    await startTeleprompterPlayback('constant');
 });
 
 // Reset App Button
@@ -1364,15 +1371,16 @@ async function handleDeviceChange(): Promise<void> {
 
     // Apply microphone changes to whichever microphone-driven mode is active.
     if (state.isListening) {
-        if (state.config.scrollingMode === 'sound') {
+        if (state.activeScrollingMode === 'sound') {
             autoScrollManager.stop();
-            const started = await autoScrollManager.start();
+            const started = await autoScrollManager.start('sound');
             if (!started) {
                 state.isListening = false;
+                state.activeScrollingMode = null;
                 const { updateMicUI } = await import('./render');
                 updateMicUI(false);
             }
-        } else if (state.config.scrollingMode === 'voice') {
+        } else if (state.activeScrollingMode === 'voice') {
             stopListening();
             setTimeout(() => {
                 startListening();
