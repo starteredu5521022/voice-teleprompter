@@ -1,0 +1,372 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Instant hover tooltip — replaces the browser's native `title` attribute
+   (which has an OS-controlled ~1s show delay) for the main toolbar, so a
+   label shows the moment the pointer lands on a button. Mouse/hover only —
+   touch devices have no hover state, so this has no effect there (buttons
+   there rely on their own visible text/icon instead). */
+[data-tip] {
+    position: relative;
+}
+
+[data-tip]::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #000;
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.05s linear;
+    z-index: 10000;
+}
+
+@media (hover: hover) {
+    [data-tip]:hover::after {
+        opacity: 1;
+    }
+}
+
+/* On narrow phone screens the bottom button row overflows horizontally and
+   gets cut off. Rather than making it a horizontally-scrollable strip, move
+   it to a vertical column pinned to the right edge in portrait — and let it
+   fall back to the normal bottom row the instant the phone is rotated to
+   landscape (pure CSS orientation query, no JS/resize listener needed). */
+@media (orientation: portrait) and (max-width: 820px) {
+    #mainControlsDock {
+        left: auto;
+        right: 10px;
+        bottom: auto;
+        top: 50%;
+        transform: translateY(-50%);
+        flex-direction: column;
+        gap: 10px;
+        max-height: 85vh;
+        overflow-y: auto;
+    }
+}
+
+/* Settings locked while actively teleprompting — grey out every control
+   except the close button, so the panel can still be dismissed.
+   The toggle switches (Mirror Mode, Show Stop Signs, etc.) are a hidden
+   checkbox wrapped in a <label> that draws the visible pill/knob — the
+   checkbox itself is invisible, so dimming/blocking just the <input> did
+   nothing visible, and clicking the label's own switch graphic still
+   toggled it (native label→input click forwarding doesn't care about the
+   input's own pointer-events). Targeting the wrapping <label> instead
+   blocks the whole switch, and pointer-events is inherited so its children
+   (input + the visual pill div) are blocked too without needing their own
+   rule. */
+#settingsPanel.settings-locked input,
+#settingsPanel.settings-locked select,
+#settingsPanel.settings-locked label,
+#settingsPanel.settings-locked button:not(#closeSettingsBtn) {
+    pointer-events: none;
+    opacity: 0.4;
+}
+
+/* Hide scrollbar */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* The Active Word - Full white by default (no orange highlight) */
+.current-word {
+    @apply inline-block transition-colors duration-100;
+}
+
+/* Active Word Highlight - Orange (when toggle is enabled) */
+.highlight-active-word .current-word {
+    @apply text-orange-500 underline decoration-orange-500 decoration-[3px];
+}
+
+/* Word Spacing Helper */
+.script-word {
+    display: inline-block;
+    margin-right: 0.6em;
+    margin-bottom: 0.2em;
+    cursor: pointer;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+/* CJK characters are tokenized one-per-character for voice matching, but
+   Chinese/Japanese/Korean text isn't supposed to have gaps between
+   characters like space-delimited words do. */
+.script-word.cjk-char {
+    margin-right: 0;
+}
+
+/* Skippable words (inside brackets or emojis) */
+.skipped-word {
+    @apply italic opacity-50;
+}
+
+/* Stop Markers (Hidden by default, shown via class) */
+.stop-marker {
+    @apply hidden text-red-500 not-italic opacity-90;
+}
+
+/* Class added to parent to show stops */
+.show-stops .stop-marker {
+    display: inline-block;
+}
+
+/* Line Breaks (Paragraphs) */
+.line-break {
+    display: block;
+    width: 100%;
+    height: var(--paragraph-spacing, 1em);
+}
+
+/* Opacity Classes */
+
+/* Custom Range Slider Styling for Mobile */
+input[type=range] {
+    -webkit-appearance: none;
+    appearance: none;
+    /* Hides the slider so that custom slider can be made */
+    width: 100%;
+    /* Specific width is required for Firefox. */
+    background: transparent;
+    /* Otherwise white in Chrome */
+}
+
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 24px;
+    width: 24px;
+    border-radius: 50%;
+    background: #DAA000;
+    /* blue-500 -> golden */
+    cursor: pointer;
+    margin-top: -8px;
+    /* You need to specify a margin in Chrome, but in Firefox and IE it is automatic */
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+}
+
+input[type=range]::-moz-range-thumb {
+    height: 24px;
+    width: 24px;
+    border: none;
+    border-radius: 50%;
+    background: #DAA000;
+    cursor: pointer;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+}
+
+input[type=range]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 8px;
+    cursor: pointer;
+    background: #374151;
+    /* neutral-700 */
+    border-radius: 4px;
+}
+
+input[type=range]::-moz-range-track {
+    width: 100%;
+    height: 8px;
+    cursor: pointer;
+    background: #374151;
+    border-radius: 4px;
+}
+
+.text-future {
+    @apply opacity-80;
+}
+
+.text-past {
+    @apply opacity-50;
+}
+
+/* Mirror Effect - Flip Horizontally + Rotate 180deg for Teleprompter Glass */
+.mirror-mode {
+    transform: scaleX(-1) rotate(180deg);
+}
+
+/* Horizontal Mirror (beta, ?beta=hmirror) - plain horizontal flip */
+.mirror-mode-h {
+    transform: scaleX(-1);
+}
+
+/* Both mirrors combined = vertical flip + horizontal flip = 180deg rotation */
+.mirror-mode.mirror-mode-h {
+    transform: rotate(180deg);
+}
+
+/* Screen Rotation - Rotate entire app 90deg clockwise for iOS */
+.screen-rotated {
+    transform: rotate(90deg);
+    transform-origin: center center;
+    width: 100vh;
+    height: 100vw;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    margin-left: -50vh;
+    margin-top: -50vw;
+    overflow: auto;
+}
+
+
+
+/* Toggle Switch Styling */
+.toggle-checkbox:checked {
+    right: 0;
+    border-color: #DAA000;
+}
+
+.toggle-checkbox:checked+.toggle-label {
+    background-color: #DAA000;
+}
+
+/* Animations */
+@keyframes pulse-red {
+    0% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+    }
+}
+
+.recording-pulse {
+    animation: pulse-red 2s infinite;
+}
+
+/* Full-window red breathing border shown while actively recording. */
+@keyframes recording-border-breathe {
+    0%, 100% { opacity: 0.35; }
+    50% { opacity: 1; }
+}
+
+.recording-border::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9700;
+    border: 6px solid rgba(239, 68, 68, 0.75);
+    box-shadow: inset 0 0 24px rgba(239, 68, 68, 0.35);
+    animation: recording-border-breathe 2s ease-in-out infinite;
+}
+
+/* Smooth Animations */
+.smooth-animations .current-word {
+    transition: none;
+    background-image: linear-gradient(to right, #f97316 50%, var(--base-color, #ffffff) 50%);
+    background-size: 200% 100%;
+    background-position: 100% 0;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: highlight-wipe 0.25s linear forwards;
+}
+
+@keyframes highlight-wipe {
+    0% {
+        background-position: 100% 0;
+    }
+
+    100% {
+        background-position: 0 0;
+    }
+}
+
+/* ═══════════════════════ Video Mode ═══════════════════════ */
+
+/* Video preview element */
+.video-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1); /* Mirror for selfie cam */
+}
+
+#videoContainer {
+    touch-action: none;
+}
+
+/* ── Split Layout: script top, video bottom ── */
+.video-mode-split {
+    display: flex !important;
+    flex-direction: column;
+}
+
+.video-mode-split #scrollWrapper {
+    flex: 1;
+    height: auto !important;
+    min-height: 0;
+    position: relative;
+    z-index: 1;
+}
+
+.video-mode-split #videoContainer {
+    flex: 1;
+    position: relative;
+    min-height: 0;
+    border-top: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ── Overlay Layout: fullscreen video, script on top ── */
+.video-mode-overlay #videoContainer {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}
+
+.video-mode-overlay #scrollWrapper {
+    position: relative;
+    z-index: 1;
+    height: 100% !important;
+    background: rgba(0, 0, 0, 0.55) !important;
+    backdrop-filter: blur(2px);
+}
+
+/* Recording active pulse on stop button */
+.video-recording-active {
+    animation: pulse-red 2s infinite;
+}
+
+/* Responsive - Landscape adjustments for video controls */
+@media (orientation: landscape) and (max-height: 500px) {
+    .video-mode-split {
+        flex-direction: row;
+    }
+
+    .video-mode-split #scrollWrapper {
+        width: 50%;
+    }
+
+    .video-mode-split #videoContainer {
+        width: 50%;
+        border-top: none;
+        border-left: 2px solid rgba(255, 255, 255, 0.1);
+    }
+}
