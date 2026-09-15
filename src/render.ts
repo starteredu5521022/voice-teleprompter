@@ -53,6 +53,7 @@ export function renderScript(): void {
 
     els.setupScreen.classList.add('hidden');
     els.prompterContainer.classList.remove('hidden');
+    updateTopSpacer();
 
     // Toggle Google Docs Sync panel
     if (state.googleDocUrl) {
@@ -95,6 +96,17 @@ export function updateHighlight(): void {
             }
         }
     });
+}
+
+// The active line can only be centered (or pushed further down) for words
+// that have enough blank space above them to scroll into — otherwise the
+// browser clamps scrollTop at 0 and early lines get stuck near the top
+// instead of sitting at the configured activeLinePosition. Sizing the spacer
+// to containerHeight * ratio guarantees even word 0 has that room.
+export function updateTopSpacer(): void {
+    const containerHeight = els.scrollContainer.clientHeight;
+    const positionRatio = state.config.activeLinePosition / 100;
+    els.topSpacer.style.height = `${containerHeight * positionRatio}px`;
 }
 
 export function scrollToCurrent(): void {

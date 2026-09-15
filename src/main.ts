@@ -2,7 +2,7 @@ import './style.css';
 import { registerSW } from 'virtual:pwa-register';
 import { initElements, els } from './elements';
 import { state, DEFAULT_CONFIG } from './state';
-import { renderScript, updateHighlight, scrollToCurrent, applySettings, renderHistoryList, restartScript } from './render';
+import { renderScript, updateHighlight, scrollToCurrent, updateTopSpacer, applySettings, renderHistoryList, restartScript } from './render';
 import { initSpeech, startListening, stopListening } from './speech';
 import { autoScrollManager } from './autoscroll';
 import { saveToHistory, getHistory, clearAllHistory, saveConfig, loadConfig, saveRecordingDirHandle, getRecordingDirHandle } from './storage';
@@ -668,6 +668,26 @@ els.micButton.addEventListener('click', async () => {
     }
 });
 
+// Plain Play Button — always constant-speed scrolling, ignores whatever
+// scrollingMode/recording is configured, since "just play" shouldn't need a
+// trip through settings first.
+els.playButton.addEventListener('click', async () => {
+    if (state.isListening) {
+        if (state.isRecording) {
+            if (state.recordingMode === 'video') {
+                stopRecording();
+            } else {
+                stopAudioOnlyRecording();
+            }
+        }
+        stopTeleprompterPlayback();
+        return;
+    }
+    state.config.scrollingMode = 'constant';
+    updateScrollingUI();
+    await startTeleprompterPlayback();
+});
+
 // Reset App Button
 els.resetAppBtn.addEventListener('click', resetApp);
 
@@ -828,10 +848,10 @@ els.activeLinePositionInput.addEventListener('input', (e) => {
     state.config.activeLinePosition = val;
     els.activeLinePositionVal.textContent = `${val}%`;
 
-    // Update spacer to allow scrolling to the bottom-most position
-    // If position is 90% (bottom), we need less spacer at top but more at bottom?
-    // Actually, scrollToCurrent handles the positioning logic.
-    // We just need to trigger a scroll update.
+    // The top spacer must grow/shrink with the ratio too, otherwise early
+    // words don't have room to scroll up to the new position (see
+    // updateTopSpacer in render.ts).
+    updateTopSpacer();
     scrollToCurrent();
 });
 

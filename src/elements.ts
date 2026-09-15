@@ -30,6 +30,7 @@ export interface Elements {
     appBody: HTMLElement;
     micButton: HTMLElement;
     micIcon: HTMLElement;
+    playButton: HTMLElement;
     statusIndicator: HTMLElement;
     mirrorToggle: HTMLInputElement;
     mirrorModeLabel: HTMLElement;
@@ -160,6 +161,7 @@ export function initElements(): void {
         bgColorPresets: document.getElementById('bgColorPresets')!,
         appBody: document.getElementById('appBody')!,
         micButton: document.getElementById('micButton')!,
+        playButton: document.getElementById('playButton')!,
         micIcon: document.getElementById('micIcon')!,
         statusIndicator: document.getElementById('statusIndicator')!,
         mirrorToggle: document.getElementById('mirrorToggle') as HTMLInputElement,

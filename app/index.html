@@ -311,7 +311,7 @@
         <div id="scrollWrapper" class="h-full w-full relative flex flex-col flex-grow min-h-0">
             <!-- Scroll Container -->
             <div id="scrollContainer" class="flex-grow overflow-y-auto no-scrollbar relative scroll-smooth h-full w-full">
-                <div id="topSpacer" class="h-[45vh]"></div>
+                <div id="topSpacer" class="h-[50vh]"></div>
                 <div id="scriptContent" class="max-w-5xl mx-auto px-8 pb-[50vh] text-center outline-none"
                     style="font-size: 40px;">
                     <!-- Script content injected here -->
@@ -374,6 +374,15 @@
                 <div id="statusIndicator"
                     class="hidden absolute -top-1 -right-1 h-4 w-4 bg-green-500 rounded-full border-2 border-black">
                 </div>
+            </button>
+
+            <!-- 4b. Plain Play (always starts constant-speed scrolling, no voice/sound, no recording) -->
+            <button id="playButton"
+                class="pointer-events-auto p-3 rounded-full bg-neutral-700/90 border border-neutral-500 backdrop-blur text-neutral-200 hover:text-white hover:bg-neutral-600 transition-all"
+                data-tip="單純播放（固定速度捲動，不含錄影）" aria-label="單純播放">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z" />
+                </svg>
             </button>
 
             <!-- 5. Recording Armed Toggle (arms recording to start together with the button above; doesn't record by itself) -->
